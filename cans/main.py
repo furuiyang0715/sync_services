@@ -52,7 +52,10 @@ def gen_diff(market_start, end, timestamp):
         sus = gen_inc_code_sus(code, start, end, timestamp)
         delisted_infos = gen_delisted_info(code, timestamp)
         delisted = gen_delisted_days(delisted_infos, end)
+        if not sus:
+            sus = []
         single_sus = set(market_sus + sus + delisted) - set(market_sus)
+
         yield code, single_sus
 
 
@@ -114,7 +117,7 @@ def check_mongo_diff(code, single_sus, ALREADYCHECK=False, DEL=False):
 
 @log_method_time_usage
 def inc():
-    end_time = utils.gen_limit_date() + datetime.timedelta(days=2)
+    end_time = utils.gen_limit_date()
     timestamp = datetime.datetime.now()
     market_start = utils.market_first_day()
 
@@ -133,6 +136,7 @@ def inc():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     inc()
 
 

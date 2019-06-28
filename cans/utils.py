@@ -11,7 +11,7 @@ import logging
 from pymongo import MongoClient
 from sqlalchemy import create_engine
 
-from calendars import all_codes
+from cans import all_codes
 from cans.sconfig import MONGO_URL, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DB, MONGO_DB1, MONGO_COLL, \
     MONGO_DB2
 
@@ -28,8 +28,13 @@ def gen_calendars_coll():
 
 
 def DC2():
+
+    #  mysql_string = f"""mysql+pymysql://{cf['user']}:{cf['password']}@{cf['host']}:{cf.get('port')
+    #     }/{cf['sqlDBname']}?charset=gbk"""
     mysql_string = f"""mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/
                        {MYSQL_DB}?charset=gbk"""
+
+    # print(mysql_string)
 
     cli = create_engine(mysql_string)
 
@@ -104,7 +109,7 @@ def convert_front_map(codes):
 
 
 def gen_sync_codes():
-    codes = all_codes
+    codes = all_codes.all_codes
     return codes
 
 
@@ -127,9 +132,9 @@ def gen_last_mongo_date(code=None):
 
 
 if __name__ == "__main__":
-    start_time = datetime.datetime(2019, 5, 1)
-    end_time = datetime.datetime(2019, 5, 10)
-    ret1 = get_date_list(start_time, end_time)
+    # start_time = datetime.datetime(2019, 5, 1)
+    # end_time = datetime.datetime(2019, 5, 10)
+    # ret1 = get_date_list(start_time, end_time)
     # print(ret1)
 
     # print(yyyymmdd_date(start_time))
@@ -140,9 +145,13 @@ if __name__ == "__main__":
     # ret3 = gen_limit_date()
     # print(ret3)
 
-    code = "002911"
-    ret4 = gen_last_mongo_date(code)
-    print(ret4)
+    # code = "002911"
+    # ret4 = gen_last_mongo_date(code)
+    # print(ret4)
+
+    DC2()
+
+    pass
 
 
 
