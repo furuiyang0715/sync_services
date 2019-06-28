@@ -47,8 +47,10 @@ def bulk_insert(code, sus):
     print(f"{code} 进入增加流程")
     coll = utils.gen_calendars_coll()
     bulks = list()
+    # 将 code 转换为 带前缀的格式
+    f_code = utils.code_convert(code)
     for s in sus:
-        bulks.append({"code": code, "date": s, "date_int": utils.yyyymmdd_date(s), "ok": False})
+        bulks.append({"code": f_code, "date": s, "date_int": utils.yyyymmdd_date(s), "ok": False})
     try:
         print(bulks)
         ret = coll.insert_many(bulks)
@@ -81,13 +83,15 @@ def check_mongo_diff(code, single_sus):
 
 @log_method_time_usage
 def main():
-    start_time = datetime.datetime(2000, 1, 1)
-    end_time = datetime.datetime(2019, 3, 28)
+    start_time = utils.market_first_day()
+    # end_time = utils.gen_limit_date()
+    end_time = datetime.datetime(2019, 3, 1)
     ts = datetime.datetime.now()
     for code, single_sus in gen_diff(start_time, end_time, ts):
         print(code, single_sus)
         add_sus, del_sus = check_mongo_diff(code, single_sus)
         print(code, add_sus, "\n",  del_sus)
+
         # 对 add_sus 进行插入
         if add_sus:
             bulk_insert(code, add_sus)
@@ -96,11 +100,28 @@ def main():
             bulk_delete(code, del_sus)
 
 
+def inc():
+    # 增量
+    # start_time =
+    pass
+
+
+def detection():
+    pass
+
 
 if __name__ == "__main__":
 
     main()
 
 
+
+## 对于一个同步来说，分为三种情况,
+## 一是首次同步
+    # 对于首次同步来说，开始时间是数据库中的最小时间; 结束时间是截止时间；时间戳是程序运行时当下时间。
+## 二是增量同步
+    # 对于增量同步，开始时间是数据库中上一次记录的时间，结束时间是截止时间，时间戳是程序运行的当下时间
+## 三是更改检测
+    # 对于更新检测来说，找出一段时间内的变动情况，进行相应的修改处理
 
 
