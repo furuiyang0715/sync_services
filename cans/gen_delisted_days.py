@@ -74,6 +74,8 @@ def gen_delisted_info(code, timestamp):
 
 
 def gen_delisted_days(infos, limit_date):
+    if not infos:
+        return list()
     # 生成某只股票的汇总退市时间列表
     # 将 infos 按照 change_date 进行排序
 
