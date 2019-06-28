@@ -43,6 +43,7 @@ def gen_inc_code_sus(code, start, end, timestamp):
     and UPDATETIMEJZ <= '{timestamp}'
 --     and NoticeEndDate >= '{start}'
     ;"""
+    # print(query_sql)
 
     try:
         with conn.cursor() as cursor:
