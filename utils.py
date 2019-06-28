@@ -228,6 +228,19 @@ def gen_last_mongo_date(code=None):
     return date
 
 
+class LoggerWriter:
+    def __init__(self, logger, level):
+        self.logger = logger
+        self.level = level
+
+    def write(self, message):
+        if message != '\n':
+            self.logger.log(self.level, message)
+
+    def flush(self):
+        return True
+
+
 if __name__ == "__main__":
     # start_time = datetime.datetime(2019, 5, 1)
     # end_time = datetime.datetime(2019, 5, 10)

@@ -7,9 +7,8 @@ import logging.config
 from importlib import util
 
 from apscheduler.schedulers.blocking import BlockingScheduler
-
-from cans.detection import task
 from daemon import Daemon
+from index_sync.index_sync import IndexSync
 from utils import LoggerWriter
 
 
@@ -39,7 +38,7 @@ class MySyncDaemon(Daemon):
         sched = BlockingScheduler()
         try:
             s2 = datetime.datetime(2019, 6, 28, 17, 40, 0)
-            sched.add_job(self.dummy_sched, 'interval', minutes=5, start_date=s2)
+            sched.add_job(self.dummy_sched, 'interval', days=30, start_date=s2)
             sched.start()
         except Exception as e:
             self.logger.error(f'Cannot start scheduler. Error: {e}')
@@ -47,7 +46,7 @@ class MySyncDaemon(Daemon):
 
     def dummy_sched(self):
         try:
-            task()
+            IndexSync().daily_sync()
         except Exception as e:
             self.logger.warning(f"task fail, {e}", exc_info=True)
             sys.exit(1)
@@ -59,25 +58,24 @@ class MySyncDaemon(Daemon):
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("./logging.conf")
-    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/calendars/detection.log', 'midnight', 1, 10))
+    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/index/index.log', 'midnight', 1, 10))
 
     logging.config.fileConfig(config)
-    logger = logging.getLogger('detection')
+    logger = logging.getLogger('index')
 
-    # detection.pid 是检测程序的pid文件
-    pid_file = os.path.join(os.getcwd(), "detection.pid")
+    pid_file = os.path.join(os.getcwd(), "index.pid")
     log_err = LoggerWriter(logger, logging.ERROR)
-    detection = MySyncDaemon(pidfile=pid_file, log_err=log_err)
+    index = MySyncDaemon(pidfile=pid_file, log_err=log_err)
 
     if len(sys.argv) >= 2:
         if 'start' == sys.argv[1]:
-            detection.start()
+            index.start()
         elif 'stop' == sys.argv[1]:
-            detection.stop()
+            index.stop()
         elif 'restart' == sys.argv[1]:
-            detection.restart()
+            index.restart()
         elif 'status' == sys.argv[1]:
-            detection.status()
+            index.status()
         else:
             sys.stderr.write("Unknown command\n")
             sys.exit(2)
