@@ -161,6 +161,6 @@ def task():
     mydetection(ts1, ts2)  # 校验个股的更改
 
 
-if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    task()
+# if __name__ == "__main__":
+#     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+#     task()

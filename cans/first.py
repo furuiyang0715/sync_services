@@ -135,9 +135,9 @@ def inc():
             bulk_delete(code, del_sus)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    inc()
+# if __name__ == "__main__":
+#     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+#     inc()
 
 
 
