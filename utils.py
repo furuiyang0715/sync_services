@@ -123,6 +123,10 @@ def gen_index_coll():
     return DB()[MONGO_DB1][MONGO_COLL_INDEX]
 
 
+def gen_finance_DB():
+    return DB()[MONGO_DB1]
+
+
 def DC2():
 
     #  mysql_string = f"""mysql+pymysql://{cf['user']}:{cf['password']}@{cf['host']}:{cf.get('port')
@@ -226,6 +230,19 @@ def gen_last_mongo_date(code=None):
     except:
         date = None
     return date
+
+
+def gen_finance_sync_tables():
+    return [
+        "comcn_balancesheet",  # "资产负债表",
+        "comcn_cashflowstatement",  # "现金流量表(新会计准则)",
+        "comcn_incomestatement",  # "利润分配表(新会计准则)",
+        "comcn_fsderiveddata",  # "公司衍生报表数据(新会计准则)",
+        # "comcn_qcashflowstatement",
+        # "comcn_qincomestatement",
+        "comcn_dividend",  # 分红
+        "comcn_sharestru",  # 股本
+    ]
 
 
 class LoggerWriter:
