@@ -1,0 +1,6 @@
+*.pyc
+temp
+local
+.idea
+*.log
+*/logs/*
