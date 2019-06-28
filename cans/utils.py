@@ -80,13 +80,17 @@ def code_convert(code):
         raise ValueError("股票格式有误")
 
 
-def gen_last_mongo_date(code):
+def gen_last_mongo_date(code=None):
     # 取出上次同步数据的最后一天 用于增量更新
+    # 不同于 calendar 的逻辑 这时候上一次同步的最后时间已经不是最后一个数据了（因为 calendars 只是插入停牌数据）
+    # 取出一个所有数据中最大的时间作为上一次时间 还是保持原样 多查询几次 Emmm This is a problem ...
+    # 或者就是找个地方记录下数据 但是我觉得还是尽量不使用记录表比较好
     coll = gen_calendars_coll()
-    print(coll.find().next())
-
-    f_code = code_convert(code)
-    cursor = coll.find({"code": f_code}, {"date": 1}).sort([("date", pymongo.DESCENDING)]).limit(1)
+    if code:
+        f_code = code_convert(code)
+        cursor = coll.find({"code": f_code}, {"date": 1}).sort([("date", pymongo.DESCENDING)]).limit(1)
+    else:
+        cursor = coll.find({}, {"date": 1}).sort([('date', pymongo.DESCENDING)]).limit(1)
     try:
         date = cursor.next().get("date")
     except:
@@ -105,7 +109,7 @@ if __name__ == "__main__":
     # ret2 = market_first_day()
     # print(ret2)
 
-    ret3 = gen_limit_date()
+    # ret3 = gen_limit_date()
     # print(ret3)
 
     code = "002911"

@@ -19,6 +19,8 @@
 import datetime
 import sys
 import time
+import logging
+
 
 from cans import utils
 from cans.all_codes import all_codes
@@ -27,6 +29,8 @@ from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus
 from cans.utils import DB
 
+logger = logging.getLogger("inc")
+
 
 def log_method_time_usage(func):
     def wrapped(*args, **kwargs):
@@ -34,7 +38,7 @@ def log_method_time_usage(func):
         result = func(*args, **kwargs)
         dt = time.time()-start
         if dt > 0.1:
-            print(f"[TimeUsage] {func.__module__}.{func.__name__} usage: {dt}")
+            logger.info(f"[TimeUsage] {func.__module__}.{func.__name__} usage: {dt}")
         return result
     return wrapped
 
@@ -53,7 +57,7 @@ def gen_diff(market_start, end, timestamp):
 
 
 def bulk_insert(code, sus):
-    print(f"{code} 进入增加流程")
+    logger.info(f"{code} 进入增加流程")
     coll = utils.gen_calendars_coll()
     bulks = list()
     # 将 code 转换为 带前缀的格式
@@ -61,25 +65,20 @@ def bulk_insert(code, sus):
     for s in sus:
         bulks.append({"code": f_code, "date": s, "date_int": utils.yyyymmdd_date(s), "ok": False})
     try:
-        # print(bulks)
         ret = coll.insert_many(bulks)
-        # print(ret)
     except Exception as e:
-        # 批量插入出错的话 TODO
-        print(e)
-        pass
+        # 批量插入出错的话
+        logger.warning(f"批量插入有误，错误的原因是 {e}")
 
 
 def bulk_delete(code, sus):
-    print(f"{code} 进入删除流程")
+    logger.info(f"{code} 进入删除流程")
     coll = utils.gen_calendars_coll()
     f_code = utils.code_convert(code)
     try:
         ret = coll.delete_many({"code": f_code, "date": {"$in": list(sus)}})
-        # print(ret)
     except Exception as e:
-        print(e)
-        pass
+        logger.info(f'批量删除有误，错误的原因是 {e}')
 
 
 def check_mongo_diff(code, single_sus, ALREADYCHECK=False, DEL=False):
@@ -93,7 +92,7 @@ def check_mongo_diff(code, single_sus, ALREADYCHECK=False, DEL=False):
     :param DEL:
     :return:
     """
-    print("股票代码是： ", code)
+    logger.info(f"股票代码是：{code} ")
     already_sus = list()
 
     if ALREADYCHECK:  # 需要对已经有的数据进行插入重复检查
@@ -101,10 +100,8 @@ def check_mongo_diff(code, single_sus, ALREADYCHECK=False, DEL=False):
         f_code = utils.code_convert(code)
         cursor = coll.find({"code": f_code, "ok": False}, {"date": 1, "_id": 0})
         already_sus = [r.get("date") for r in cursor]
-        # print("数据库已经存在的数据: ", len(already_sus))
-        # print("本次数据:", len(single_sus))
         add_sus = set(single_sus) - set(already_sus)  # 需要插入的
-        print("需要新插入的数据: ", len(add_sus))
+        # logger.info(f"需要新插入的数据: {add_sus} \n 插入数量是： {len(add_sus)}")
     else:
         add_sus = single_sus
 
@@ -121,36 +118,22 @@ def inc():
     timestamp = datetime.datetime.now()
     market_start = utils.market_first_day()
 
-    # ADD = dict()
-    # DEL = dict()
-
     for code, single_sus in gen_diff(market_start, end_time, timestamp):
         add_sus, del_sus = check_mongo_diff(code, single_sus, ALREADYCHECK=True, DEL=True)
 
         # 优化 累计到一定量再插入
         if add_sus:
-            print(add_sus)
-            print("=="*99)
+            logger.info("="*200)
+            logger.info(f"需要新插入的数据: {add_sus} \n 插入数量是： {len(add_sus)}")
             bulk_insert(code, add_sus)
         if del_sus:
-            print("**"*99)
-            print(del_sus)
+            logger.info("*"*200)
+            logger.info(f"需要新删除的数据: {del_sus} \n 插入数量是： {len(del_sus)}")
             bulk_delete(code, del_sus)
-
-    # print(ADD)
-    # print(DEL)
-
-
-def detection():
-
-
-
-    pass
 
 
 if __name__ == "__main__":
-
-    inc()   # [TimeUsage] __main__.inc usage: 35.15529990196228
+    inc()
 
 
 
