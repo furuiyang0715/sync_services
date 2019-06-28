@@ -249,11 +249,3 @@ if __name__ == "__main__":
     DC2()
 
     pass
-
-
-
-
-
-
-
-    pass
