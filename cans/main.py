@@ -8,6 +8,14 @@
 # 个股检测更新逻辑
 # 同 detection 的逻辑 但是最终只插入个股自己的停牌日
 
+## 对于一个同步来说，分为三种情况,
+## 一是首次同步
+    # 对于首次同步来说，开始时间是数据库中的最小时间; 结束时间是截止时间；时间戳是程序运行时当下时间。
+## 二是增量同步
+    # 对于增量同步，开始时间是数据库中上一次记录的时间，结束时间是截止时间，时间戳是程序运行的当下时间
+## 三是更改检测
+    # 对于更新检测来说，找出一段时间内的变动情况，进行相应的修改处理
+
 import datetime
 import sys
 import time
@@ -31,14 +39,15 @@ def log_method_time_usage(func):
     return wrapped
 
 
-def gen_diff(start, end, timestamp):
-    market_sus = gen_sh000001(start, end, timestamp)
+def gen_diff(market_start, end, timestamp):
+    market_sus = gen_sh000001(market_start, end, timestamp)
     for code in all_codes:
+        start = utils.gen_last_mongo_date(code)
+        if not start:
+            start = market_start
         sus = gen_inc_code_sus(code, start, end, timestamp)
-        # print("sus: ", sus)
         delisted_infos = gen_delisted_info(code, timestamp)
         delisted = gen_delisted_days(delisted_infos, end)
-        # print("delisted: ", delisted)
         single_sus = set(market_sus + sus + delisted) - set(market_sus)
         yield code, single_sus
 
@@ -52,10 +61,11 @@ def bulk_insert(code, sus):
     for s in sus:
         bulks.append({"code": f_code, "date": s, "date_int": utils.yyyymmdd_date(s), "ok": False})
     try:
-        print(bulks)
+        # print(bulks)
         ret = coll.insert_many(bulks)
-        print(ret)
+        # print(ret)
     except Exception as e:
+        # 批量插入出错的话 TODO
         print(e)
         pass
 
@@ -63,65 +73,88 @@ def bulk_insert(code, sus):
 def bulk_delete(code, sus):
     print(f"{code} 进入删除流程")
     coll = utils.gen_calendars_coll()
+    f_code = utils.code_convert(code)
     try:
-        ret = coll.delete_many({"code": code, "date": {"$in": sus}})
-        print(ret)
+        ret = coll.delete_many({"code": f_code, "date": {"$in": list(sus)}})
+        # print(ret)
     except Exception as e:
         print(e)
         pass
 
 
-def check_mongo_diff(code, single_sus):
-    coll = utils.gen_calendars_coll()
-    cursor = coll.find({"code": code, "ok": False}, {"date": 1, "_id": 0})
-    already_sus = [r.get("date") for r in cursor]
-    print("数据库已经存在的数据: ", already_sus)
-    add_sus = set(single_sus) - set(already_sus)  # 需要插入的
-    del_sus = set(already_sus) - set(single_sus)  # 需要删除的
+def check_mongo_diff(code, single_sus, ALREADYCHECK=False, DEL=False):
+    """
+    DEL 是个标识位 表示是否根据 singe_sus 来调整删除原有数据 默认是只增加 不删除
+    ALREADYCHECK 也是个标志位 表示在插入新数据时，是否对数据库已经有该数据进行检查 默认是增量更新
+    数据都是原来没有插入过的 不检查
+    :param code:
+    :param single_sus:
+    :param ALREADYCHECK:
+    :param DEL:
+    :return:
+    """
+    print("股票代码是： ", code)
+    already_sus = list()
+
+    if ALREADYCHECK:  # 需要对已经有的数据进行插入重复检查
+        coll = utils.gen_calendars_coll()
+        f_code = utils.code_convert(code)
+        cursor = coll.find({"code": f_code, "ok": False}, {"date": 1, "_id": 0})
+        already_sus = [r.get("date") for r in cursor]
+        # print("数据库已经存在的数据: ", len(already_sus))
+        # print("本次数据:", len(single_sus))
+        add_sus = set(single_sus) - set(already_sus)  # 需要插入的
+        print("需要新插入的数据: ", len(add_sus))
+    else:
+        add_sus = single_sus
+
+    if DEL:  # 需要检测后面可能又被删除数据
+        del_sus = set(already_sus) - set(single_sus)  # 需要删除的
+    else:
+        del_sus = set()
     return add_sus, del_sus
 
 
 @log_method_time_usage
-def main():
-    start_time = utils.market_first_day()
-    # end_time = utils.gen_limit_date()
-    end_time = datetime.datetime(2019, 3, 1)
-    ts = datetime.datetime.now()
-    for code, single_sus in gen_diff(start_time, end_time, ts):
-        print(code, single_sus)
-        add_sus, del_sus = check_mongo_diff(code, single_sus)
-        print(code, add_sus, "\n",  del_sus)
+def inc():
+    end_time = utils.gen_limit_date() + datetime.timedelta(days=2)
+    timestamp = datetime.datetime.now()
+    market_start = utils.market_first_day()
 
-        # 对 add_sus 进行插入
+    # ADD = dict()
+    # DEL = dict()
+
+    for code, single_sus in gen_diff(market_start, end_time, timestamp):
+        add_sus, del_sus = check_mongo_diff(code, single_sus, ALREADYCHECK=True, DEL=True)
+
+        # 优化 累计到一定量再插入
         if add_sus:
+            print(add_sus)
+            print("=="*99)
             bulk_insert(code, add_sus)
-        # 对 del_sus 进行删除
         if del_sus:
+            print("**"*99)
+            print(del_sus)
             bulk_delete(code, del_sus)
 
-
-def inc():
-    # 增量
-    # start_time =
-    pass
+    # print(ADD)
+    # print(DEL)
 
 
 def detection():
+
+
+
     pass
 
 
 if __name__ == "__main__":
 
-    main()
+    inc()   # [TimeUsage] __main__.inc usage: 35.15529990196228
 
 
 
-## 对于一个同步来说，分为三种情况,
-## 一是首次同步
-    # 对于首次同步来说，开始时间是数据库中的最小时间; 结束时间是截止时间；时间戳是程序运行时当下时间。
-## 二是增量同步
-    # 对于增量同步，开始时间是数据库中上一次记录的时间，结束时间是截止时间，时间戳是程序运行的当下时间
-## 三是更改检测
-    # 对于更新检测来说，找出一段时间内的变动情况，进行相应的修改处理
+
+
 
 
