@@ -4,7 +4,7 @@ import sys
 from cans import utils
 from cans.utils import DC
 
-logger = logging.getLogger("sus")
+logger = logging.getLogger()
 
 
 def gen_inc_code_sus(code, start, end, timestamp):

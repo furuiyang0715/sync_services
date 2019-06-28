@@ -29,7 +29,7 @@ from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus
 from cans.utils import DB
 
-logger = logging.getLogger("inc")
+logger = logging.getLogger()
 
 
 def log_method_time_usage(func):

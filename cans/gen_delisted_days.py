@@ -4,7 +4,7 @@ import logging
 from cans import utils
 from cans.utils import DC
 
-logger = logging.getLogger("delisted")
+logger = logging.getLogger()
 
 
 def gen_delisted_info(code, timestamp):

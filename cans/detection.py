@@ -7,7 +7,7 @@ from cans.gen_delisted_days import gen_delisted_days, gen_delisted_info
 from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus
 
-logger = logging.getLogger("detection")
+logger = logging.getLogger()
 MARKET_LIMIT_DATE = datetime.datetime(2020, 1, 1)
 error_code = list()
 

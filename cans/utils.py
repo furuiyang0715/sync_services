@@ -15,7 +15,7 @@ from cans import all_codes
 from cans.sconfig import MONGO_URL, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DB, MONGO_DB1, MONGO_COLL, \
     MONGO_DB2
 
-logger = logging.getLogger("utils")
+logger = logging.getLogger()
 
 
 def DB():
