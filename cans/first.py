@@ -17,17 +17,14 @@
     # 对于更新检测来说，找出一段时间内的变动情况，进行相应的修改处理
 
 import datetime
-import sys
 import time
 import logging
 
-
-from cans import utils
+import utils
 from cans.all_codes import all_codes
 from cans.gen_delisted_days import gen_delisted_info, gen_delisted_days
 from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus
-from cans.utils import DB
 
 logger = logging.getLogger()
 

@@ -1,7 +1,7 @@
 import datetime
 
-from cans import utils
-from cans.utils import DC
+import utils
+from utils import DC
 
 
 def gen_sh000001(start, end, timestamp):

@@ -1,8 +1,8 @@
 import datetime
 import logging
 
-from cans import utils
-from cans.utils import DC
+import utils
+from utils import DC
 
 logger = logging.getLogger()
 
@@ -110,7 +110,7 @@ def gen_delisted_days(infos, limit_date):
         elif not start.get("is_listed") and end.get("is_listed"):  # False True
             # 直到重新上市时间的前一天加入退市时间
             delisted_days.extend(utils.get_date_list(start.get("change_date"), end.get("change_date") -
-                                               datetime.timedelta(days=1)))
+                                                     datetime.timedelta(days=1)))
 
     # 从最后一个时间到今天的判断
     last_info = infos[-1]

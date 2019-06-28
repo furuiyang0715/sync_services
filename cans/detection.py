@@ -1,8 +1,7 @@
-import sys
 import datetime
 import logging
 
-from cans import utils
+import utils
 from cans.gen_delisted_days import gen_delisted_days, gen_delisted_info
 from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus

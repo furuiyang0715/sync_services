@@ -1,8 +1,8 @@
 import logging
 import sys
 
-from cans import utils
-from cans.utils import DC
+import utils
+from utils import DC
 
 logger = logging.getLogger()
 
