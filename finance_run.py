@@ -58,7 +58,7 @@ class MySyncDaemon(Daemon):
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("./logging.conf")
-    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/finance/index.log', 'midnight', 1, 10))
+    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/finance/finance.log', 'midnight', 1, 10))
 
     logging.config.fileConfig(config)
     logger = logging.getLogger('finance')
