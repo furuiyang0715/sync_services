@@ -1,13 +1,21 @@
 import datetime
+import sys
+
 import pymongo
 
 import pandas as pd
 import pymysql
 
+import logging
+
 from pymongo import MongoClient
 from sqlalchemy import create_engine
+
+from calendars import all_codes
 from cans.sconfig import MONGO_URL, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DB, MONGO_DB1, MONGO_COLL, \
     MONGO_DB2
+
+logger = logging.getLogger("utils")
 
 
 def DB():
@@ -19,13 +27,13 @@ def gen_calendars_coll():
     return DB()[MONGO_DB2][MONGO_COLL]
 
 
-# def DC():
-#     mysql_string = f"""mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/
-#                        {MYSQL_DB}?charset=gbk"""
-#
-#     cli = create_engine(mysql_string)
-#
-#     return cli
+def DC2():
+    mysql_string = f"""mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/
+                       {MYSQL_DB}?charset=gbk"""
+
+    cli = create_engine(mysql_string)
+
+    return cli
 
 def DC():
     return pymysql.connect(
@@ -78,6 +86,26 @@ def code_convert(code):
         return "SH" + code
     else:
         raise ValueError("股票格式有误")
+
+
+def convert_front_map(codes):
+    def convert(code):
+        if code[0] == "0" or code[0] == "3":
+            return "SZ" + code
+        elif code[0] == "6":
+            return "SH" + code
+        else:
+            logger.warning("wrong code: ", code)
+            sys.exit(1)
+    res_map = dict()
+    for c in codes:
+        res_map.update({c: convert(c)})
+    return res_map
+
+
+def gen_sync_codes():
+    codes = all_codes
+    return codes
 
 
 def gen_last_mongo_date(code=None):
