@@ -19,7 +19,7 @@ class MySyncDaemon(Daemon):
             util.find_spec('setproctitle')
             self.setproctitle = True
             import setproctitle
-            setproctitle.setproctitle('detection')
+            setproctitle.setproctitle('index')
         except ImportError:
             self.setproctitle = False
         self.logger.info("Running into. ")

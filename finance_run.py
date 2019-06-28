@@ -8,7 +8,7 @@ from importlib import util
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from daemon import Daemon
-from index_sync.index_sync import IndexSync
+from finances.base_sync import BaseFinanceSync
 from utils import LoggerWriter
 
 
@@ -19,7 +19,7 @@ class MySyncDaemon(Daemon):
             util.find_spec('setproctitle')
             self.setproctitle = True
             import setproctitle
-            setproctitle.setproctitle('detection')
+            setproctitle.setproctitle('finance')
         except ImportError:
             self.setproctitle = False
         self.logger.info("Running into. ")
@@ -38,7 +38,7 @@ class MySyncDaemon(Daemon):
         sched = BlockingScheduler()
         try:
             s2 = datetime.datetime(2019, 6, 28, 17, 40, 0)
-            sched.add_job(self.dummy_sched, 'interval', days=30, start_date=s2)
+            sched.add_job(self.dummy_sched, 'interval', days=5, start_date=s2)
             sched.start()
         except Exception as e:
             self.logger.error(f'Cannot start scheduler. Error: {e}')
@@ -46,7 +46,7 @@ class MySyncDaemon(Daemon):
 
     def dummy_sched(self):
         try:
-            IndexSync().daily_sync()
+            BaseFinanceSync().daily_sync()
         except Exception as e:
             self.logger.warning(f"task fail, {e}", exc_info=True)
             sys.exit(1)
@@ -58,24 +58,24 @@ class MySyncDaemon(Daemon):
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("./logging.conf")
-    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/index/index.log', 'midnight', 1, 10))
+    config["handler_timedRotatingFileHandler"]["args"] = str(('./logs/finance/index.log', 'midnight', 1, 10))
 
     logging.config.fileConfig(config)
-    logger = logging.getLogger('index')
+    logger = logging.getLogger('finance')
 
-    pid_file = os.path.join(os.getcwd(), "index.pid")
+    pid_file = os.path.join(os.getcwd(), "finance.pid")
     log_err = LoggerWriter(logger, logging.ERROR)
-    index = MySyncDaemon(pidfile=pid_file, log_err=log_err)
+    finance = MySyncDaemon(pidfile=pid_file, log_err=log_err)
 
     if len(sys.argv) >= 2:
         if 'start' == sys.argv[1]:
-            index.start()
+            finance.start()
         elif 'stop' == sys.argv[1]:
-            index.stop()
+            finance.stop()
         elif 'restart' == sys.argv[1]:
-            index.restart()
+            finance.restart()
         elif 'status' == sys.argv[1]:
-            index.status()
+            finance.status()
         else:
             sys.stderr.write("Unknown command\n")
             sys.exit(2)
