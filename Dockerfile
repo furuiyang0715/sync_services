@@ -32,4 +32,4 @@ WORKDIR /home/sync_services
 # 安装依赖
 RUN pip install -r ./requirements.txt
 
-ENTRYPOINT python run.py
+#ENTRYPOINT python run.py

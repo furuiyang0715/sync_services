@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 
 from cans import all_codes
 from sconfig import (MONGO_URL, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DB,
-                     MONGO_DB2, MONGO_DB1, MONGO_COLL_CALENDARS, MONGO_COLL_INDEX)
+                     MONGO_DB2, MONGO_DB1, MONGO_COLL_CALENDARS, MONGO_COLL_INDEX, MONGO_URL_STOCK, MONGO_URL_JQData)
 
 import re
 
@@ -110,21 +110,21 @@ def end_code_map():
     return end_code_map
 
 
-def DB():
-    cli = MongoClient(MONGO_URL)
-    return cli
+# def DB():
+#     cli = MongoClient(MONGO_URL)
+#     return cli
 
 
 def gen_calendars_coll():
-    return DB()[MONGO_DB2][MONGO_COLL_CALENDARS]
+    return MongoClient(MONGO_URL_STOCK)[MONGO_DB2][MONGO_COLL_CALENDARS]
 
 
 def gen_index_coll():
-    return DB()[MONGO_DB1][MONGO_COLL_INDEX]
+    return MongoClient(MONGO_URL_JQData)[MONGO_DB1][MONGO_COLL_INDEX]
 
 
 def gen_finance_DB():
-    return DB()[MONGO_DB1]
+    return MongoClient(MONGO_URL_JQData)[MONGO_DB1]
 
 
 def DC2():
@@ -258,7 +258,66 @@ class LoggerWriter:
         return True
 
 
+def bulk_insert(cld, code, suspended, start, end):
+    # 保险起见 将 suspend的 去重排序
+    suspended = sorted(list(set(suspended)))
+
+    bulk = list()
+
+    dt = start
+
+    if not suspended:
+        logger.info("无 sus_bulk")
+
+        for _date in get_date_list(dt, end):
+            bulk.append({"code": code, "date": _date, 'date_int': yyyymmdd_date(_date), "ok": True})
+
+    else:
+        for d in suspended:  # 对于其中的每一个停牌日
+            # 转换为 整点 模式,  为了 {datetime.datetime(1991, 4, 14, 1, 0)} 这样的数据的存在
+            d = datetime.datetime.combine(d.date(), datetime.time.min)
+
+            while dt <= d:
+
+                if dt < d:
+                    bulk.append({"code": code, "date": dt, "date_int": yyyymmdd_date(dt), "ok": True})
+                    # print(f"{yyyymmdd_date(dt)}: True")
+
+                else:  # 相等即为非交易日
+                    bulk.append({"code": code, "date": dt, "date_int": yyyymmdd_date(dt), "ok": False})
+                    # print(f"{yyyymmdd_date(dt)}: False")
+
+                dt += datetime.timedelta(days=1)
+
+        # print(dt)  # dt 此时已经是最后一个停牌日期 + 1 的状态了
+        # print(end)
+
+        # dt > d:  已经跳出停牌日 在(停牌日+1) 到 截止时间 之间均为交易日
+        if dt <= end:
+            for _date in get_date_list(suspended[-1] + datetime.timedelta(days=1), end):
+                bulk.append({"code": code, "date": _date, 'date_int': yyyymmdd_date(_date), "ok": True})
+
+    logger.info(f"{code}  \n{bulk[0]}  \n{bulk[-1]}")
+
+    try:
+
+        cld.insert_many(bulk)
+
+    except Exception as e:
+
+        logger.info(f"批量插入失败 {code}, 原因是 {e}")
+
+
 if __name__ == "__main__":
+
+    demo01 = gen_calendars_coll()
+    print(demo01.find().next())
+
+    demo02 = gen_index_coll()
+    print(demo02.find().next())
+
+    demo03 = gen_finance_DB()["comcn_balancesheet"]
+    print(demo03.find().next())
     # start_time = datetime.datetime(2019, 5, 1)
     # end_time = datetime.datetime(2019, 5, 10)
     # ret1 = get_date_list(start_time, end_time)

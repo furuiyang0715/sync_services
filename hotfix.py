@@ -1,29 +1,8 @@
-# 检查整个市场的非交易日是否有变化
-
-# 个股增量逻辑：
-# for code in all: 遍历每一个股票
-# 检出其自己的非交易日和最新的市场的非交易日的差别
-# 将其与mongo数据库中已经存在的数据进行对比 进行相应的增删改查
-
-# 个股检测更新逻辑
-# 同 detection 的逻辑 但是最终只插入个股自己的停牌日
-
-## 对于一个同步来说，分为三种情况,
-## 一是首次同步
-    # 对于首次同步来说，开始时间是数据库中的最小时间; 结束时间是截止时间；时间戳是程序运行时当下时间。
-## 二是增量同步
-    # 对于增量同步，开始时间是数据库中上一次记录的时间，结束时间是截止时间，时间戳是程序运行的当下时间
-## 三是更改检测
-    # 对于更新检测来说，找出一段时间内的变动情况，进行相应的修改处理
-
 import datetime
-import pprint
-import sys
 import time
 import logging
 
 import utils
-from cans.all_codes import all_codes
 from cans.gen_delisted_days import gen_delisted_info, gen_delisted_days
 from cans.gen_market_days import gen_sh000001
 from cans.gen_sus_days import gen_inc_code_sus
@@ -142,10 +121,3 @@ def inc():
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     inc()
-
-
-
-
-
-
-

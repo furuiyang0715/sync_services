@@ -141,7 +141,7 @@ def check_market_calendar(ts):
     sh0001_sus = sorted(list(set(sus)))
     if not exist:
         logger.info("market first sync.")
-        # bulk_insert("SH000001", sh0001_sus, start=start, end=market_limit_date)
+        utils.bulk_insert(cld, "SH000001", sh0001_sus, start=start, end=market_limit_date)
     else:
         already_dates = cld.find({"code": "SH000001", "ok": False}).distinct("date")
         int_already_dates = set([utils.yyyymmdd_date(date) for date in already_dates])
@@ -155,11 +155,11 @@ def check_market_calendar(ts):
 def task():
     ts2 = datetime.datetime.now()
     # 将每次的检测时间回溯到近两天
-    ts1 = ts2 - datetime.timedelta(days=0.5)
+    ts1 = ts2 - datetime.timedelta(days=60)
     check_market_calendar(ts2)   # 校验日历的更改
     mydetection(ts1, ts2)  # 校验个股的更改
 
 
-# if __name__ == "__main__":
-#     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-#     task()
+if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    task()

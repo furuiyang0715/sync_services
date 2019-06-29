@@ -4,3 +4,6 @@ local
 .idea
 *.log
 */logs/*
+logs/*
+*.pickle
+*.pid
