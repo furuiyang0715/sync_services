@@ -1,5 +1,6 @@
 import datetime
 import os
+import pprint
 import sys
 import configparser
 import logging.config
@@ -7,6 +8,7 @@ import logging.config
 from importlib import util
 
 from apscheduler.schedulers.blocking import BlockingScheduler
+# from raven.handlers.logging import SentryHandler
 
 from cans.detection import task
 from daemon import Daemon
@@ -63,6 +65,9 @@ if __name__ == "__main__":
 
     logging.config.fileConfig(config)
     logger = logging.getLogger('detection')
+
+    # 为logger配置sentry
+    # logger.addHandler(SentryHandler(level=logging.ERROR))
 
     # detection.pid 是检测程序的pid文件
     pid_file = os.path.join(os.getcwd(), "detection.pid")
