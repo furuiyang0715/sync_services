@@ -120,7 +120,7 @@ def check_and_update(codes, timestamp):
                 else:
                     yyyy = int(str(sus)[:4])
                     mm = int(str(sus)[4:6])
-                    dd = int(str(sus[6:]))
+                    dd = int(str(sus)[6:])
                     _date = datetime.datetime(yyyy, mm, dd)
                     cld.insert_one({"code": f_code, "date_int": sus, "date": _date, "ok": False})
 
@@ -155,7 +155,7 @@ def check_market_calendar(ts):
 def task():
     ts2 = datetime.datetime.now()
     # 将每次的检测时间回溯到近两天
-    ts1 = ts2 - datetime.timedelta(days=60)
+    ts1 = ts2 - datetime.timedelta(days=1)
     check_market_calendar(ts2)   # 校验日历的更改
     mydetection(ts1, ts2)  # 校验个股的更改
 
